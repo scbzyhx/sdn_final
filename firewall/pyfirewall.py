@@ -39,8 +39,8 @@ FLOW_TIMEOUT = 20
 xid = 0
 PORT = 12345
 BUF_MAX_SIZE = 1024
-FIREWALL_PRIORITY = 200
-FIREWALL_TIMEOUT = 60
+FIREWALL_PRIORITY = of.OFP_DEFAULT_PRIORITY
+FIREWALL_TIMEOUT = 180
 
 #def recv_packet)
 
@@ -57,7 +57,11 @@ class pyfirewall(Component):
         self.requests_queue = {}
         
         self.sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-        self.sock.bind(('192.168.56.101',PORT))
+        #------------------------------
+        #According to the Host IP
+        #------------------------------
+        self.sock.bind(('192.168.56.102',PORT))
+        
         self.re = thread.start_new_thread(self.process,())
         #self.sock.listen(5)
         #print 'bind success'
@@ -189,10 +193,11 @@ class pyfirewall(Component):
                 flow[core.NW_SRC] = srcip
 
             #If no forward actions are present, the packet is dropped
-            actions = [] 
-
-
-            self.install_datapath_flow(dst.as_host(),flow,FIREWALL_TIMEOUT,FIREWALL_TIMEOUT,actions,None,FIREWALL_PRIORITY,None,None)
+            actions = []
+            self.delete_datapath_flow(dst.as_host(),flow)
+            self.install_datapath_flow(dst.as_host(),flow,0,FIREWALL_TIMEOUT,actions,None,FIREWALL_PRIORITY,None,None)
+            #by the way modify exists flow
+            #self.send_openflow_command(dst.as_host(),flow,FIREWALL_PRIORITY,)
 
 
     def install(self):
@@ -294,6 +299,9 @@ class pyfirewall(Component):
                         p.append(str(outport))
 
                     #print 'unicast'
+                    #print type(event.flow)
+                    #print dir(event.flow)
+                    #print str(event.flow)#.to_string()
                             
                     self.routing.setup_route(event.flow, route, inport, \
                                     outport, FLOW_TIMEOUT, [], True)
@@ -339,6 +347,13 @@ class pyfirewall(Component):
                 eth.type != ethernet.PAE_TYPE and\
                 eth.type != ethernet.VLAN_TYPE:
                 return CONTINUE
+            for d in self.dp_stats:
+                for port in self.dp_stats[d]['ports']:
+                    if not self.pytop.is_internal(\
+                    netinet.create_datapathid_from_host(d),port):
+                        self.send_openflow_packet(d,event.buf,port)
+            return STOP
+
             
 
             if event.flow.dl_dst.is_broadcast():
@@ -426,7 +441,7 @@ class pyfirewall(Component):
             (not ( (dpid,xid) in self.requests_queue[xid] )):
             return CONTINUE
 
-        print "xid",xid
+        #print "xid",xid , flows
         
 
 
