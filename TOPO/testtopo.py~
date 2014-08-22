@@ -1,0 +1,68 @@
+#!/usr/bin/python
+
+from mininet.topo import Topo
+from mininet.net import Mininet
+from mininet.util import dumpNodeConnections
+from mininet.log import setLogLevel,info
+from mininet.node import Controller,RemoteController
+from mininet.cli import CLI
+from mininet.util import quietRun
+
+DPID_BASE = 100
+IP_BASE = "192.168.0."
+IP_START = 50
+GW = "192.168.0.1"
+#class MyController(RemoteController):
+#    def __init__(self,name,ip=''114.212.85.170,port=6633,kwargs):
+#        RemoteController.__init__(self,name,ip,port,kwargs)
+                
+
+
+def fixNetwork
+
+def connectToInternet( host ):
+    #"Start simple Python web server on hosts"
+    info( '*** Starting SimpleHTTPServer on host', host, '\n' )
+    #host.cmd( 'cd ./http_%s/; nohup python2.7 ./webserver.py &' % (host.name) )
+    root = Node('root',inNamespace = False)
+
+    
+
+
+def stophttp():
+    "Stop simple Python web servers"
+    info( '*** Shutting down stale SimpleHTTPServers',
+          quietRun( "pkill -9 -f SimpleHTTPServer" ), '\n' )
+    info( '*** Shutting down stale webservers',
+          quietRun( "pkill -9 -f webserver.py" ), '\n' )
+def TurnNet():
+    print "start TurnNet"
+    topoo  = MyTopo()
+    info("** creating network\n")
+    net = Mininet(topo = topoo, controller = lambda name : RemoteController(name,ip = '114.212.85.7'))
+    net.start()
+    print 'after start'
+   # server1,client, sw1 = net.get('server1','h1','s1')
+    for h in topoo.my_hosts.keys():
+        host = net.get('h'+h)
+        host.setIP(IP_BASE + "%d" %(IP_START+int(h)),24)
+        #print host.intfList()
+        #host.cmd('route add 10.0.0.1')
+        host.cmd('route add default gw 192.168.0.1')
+        host.setARP('192.168.0.1','00:00:00:00:00:01')
+   
+    #server1.setIP(IP_SETTING["server1"])
+   # server2.setIP(IP_SETTING["server2"])
+   # client.setIP(IP_SETTING["client"])
+
+   # starthttp(server1)
+   # starthttp(server2)
+    CLI(net)
+  #  stophttp(server1)
+    #stophttp()
+    net.stop()
+
+if __name__=="__main__":
+    setLogLevel("info")
+    TurnNet()
+    
